@@ -25,51 +25,45 @@
         z-index: 1;
     }
     #map {
-        width: 30%;
+        width: 35%;
         height: 300px;
         float: left;
         z-index: 2;
-        top: 39%;
+        top: 66%;
     }
 </style>
 
 <body>
-    <!--https://map.naver.com/v5/?c=14187945.4633705,4479659.3810994,15,0,0,0,dha&p=YfG5ncKB1YUvIU5TIUiHjA,-128.49,-3.2,80,Float-->
     <form name="naver_maps">
         <input type="text" name="url" tabindex="1" style="width: 960px;" placeholder="https://map.naver.com/v5/?c=" />
         <input type="button" onclick="get_panorama_id()" value="입력">
     </form>
 
-
     <div id="pano" z-index: 1;>
-        <div style="color:blue; font-weight: bold; font-size : 25px">* 사용법</div>
-        <div style="color:black; font-weight: bold; ">1. 위에다가 네이버 로드뷰 URL을 입력</div>
-        <div style="color:black; font-weight: bold; ">2. 지도에 마우스를 찍으면 하단에 GPS가 나옴</div>
-        <div style="color:black; font-weight: bold; ">3. 복사하기 누르고 붙여넣으면 셀에 알아서 분리</div><br><br>
-        <div style="color:blue; font-weight: bold; font-size : 25px">* 기타</div>
-        <div style="color:black; font-weight: bold; ">1. 네이버에서 제공하는 로드뷰 API를 사용하는 건 맞으나 네이버맵에서 사용하는 로드뷰와 기능(키보드 화살표 컨트롤, 마우스 이동 등) 상 차이가 다소 존재합니다.</div>
-        <div style="color:red; font-weight: bold; "> * (제 잘못 아님)</div>
-        <div style="color:black; font-weight: bold; ">2. 업무상 편의를 위한 기능 말씀 해주시면 최대한 반영 해드리겠습니다</div>
         <div id="map" z-index: 2;></div>
     </div>
 
     <div id="marker_address"></div>
     <div id="streetview_car_address"></div>
-    <button id="copyBtn_1">복사하기</button>
+    <button id="copyBtn">복사하기</button>
 
     <script type="text/javascript"
         src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=xbdzrxswyq&submodules=panorama,geocoder"></script>
-    <script>
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
 
-        //파노라마 ID 가져오기
+
+
+<script>
+
+        //form 태그에서 파노라마 ID 파싱
         function get_panorama_id() {
             var naver_maps = document.naver_maps;
             var url = naver_maps.url.value;
             panorama_pattern = /(&p=).+\,/.exec(url)[0]
             panorama_value = panorama_pattern.split(',')[0].replace('&p=', '')
 
+            // 파노라마 옵션
             var panoramaOptions = {
-                // size: new naver.maps.Size(1024, 800),
                 panoId: panorama_value,
                 pov: {
                     pan: -130.8,
@@ -92,7 +86,6 @@
 
             //파노라마 ID값을 이용하여 거리뷰 호출
             var panorama = new naver.maps.Panorama("pano", panoramaOptions);
-
             var map = new naver.maps.Map('map', {
                 center: new naver.maps.LatLng(panorama.getPosition()),
                 zoom: 18
@@ -108,11 +101,22 @@
             //거리뷰 pano_changed 이벤트 발생시 네이버 지도 실행
             naver.maps.Event.addListener(panorama, 'pano_changed', function () {
                 var latlng = panorama.getPosition();
-                now_panorama_location =  panorama.getPosition()._lat +',' + panorama.getPosition()._lng;
-                /*파노라마 구역 끝*/
+                var now_panorama_location =  panorama.getPosition()._lat +',' + panorama.getPosition()._lng;
+
+                //거리뷰 이동시 위치값 전송
+                $(function(){
+                    var ajax = $.ajax({
+                        type:"GET",
+                        url:"gps_travle.php?gps="+now_panorama_location
+                    });
+                    ajax.done(function(now_panorama_location){
+                        $(".console-area").html(now_panorama_location);
+                    });
+                });
 
                 //마커 가운데 맞춤
                 marker.setPosition(panorama.getPosition())
+
                 //마커 클릭시 마커 이동 및 좌표 반환)
                 map.addListener('click', function (e) {
                     var marker_address = null;
@@ -138,21 +142,23 @@
                         resultDiv.innerHTML = marker_gps_address;
 
                         //복사하기 이벤트
-                        var copyBtn_1 = document.getElementById("copyBtn_1");
-                        copyBtn_1.addEventListener("click", function () {
+                        var copyBtn = document.getElementById("copyBtn");
+                        copyBtn.addEventListener("click", function () {
                             var createInput = document.createElement("input");
                             createInput.setAttribute("type", "marker_gps_address");
-                            document.getElementById("copyBtn_1").appendChild(createInput);
+                            document.getElementById("copyBtn").appendChild(createInput);
                             createInput.value = marker_gps_address;
                             createInput.select();
                             document.execCommand('copy');
-                            document.getElementById("copyBtn_1").removeChild(createInput);
+                            document.getElementById("copyBtn").removeChild(createInput);
                         });
                     });
                 });
+                
+                //클릭한 마커의 GPS좌표
                 var resultDiv = document.getElementById('marker_address');
                 resultDiv.innerHTML = '';
-                // console.log(latlng + panorama.getLocation());
+
                 //지도와 거리뷰 가운데 맞춤
                 if (!latlng.equals(map.getCenter())) {
                     map.setCenter(panorama.getPosition());
@@ -161,5 +167,4 @@
         }
     </script>
 </body>
-
 </html>

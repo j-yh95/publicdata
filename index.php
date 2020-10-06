@@ -1,4 +1,4 @@
-<h2><a href="http://jyh.kr/naver_streetview_search.html" target="_blank">네이버 거리뷰 (신기능)</a><hr>
+<h2><a href="http://jyh.kr/naver_streetview_search2.html" target="_blank">네이버 거리뷰 (신기능)</a><hr>
 <!------------------------------------------------------------------------------------------------------------------------------------------------>
 <h2>네이버 거리뷰 GPS 추출</h2>
 <form method="post">
