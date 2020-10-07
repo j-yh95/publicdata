@@ -19,7 +19,7 @@
 
     div#pano {
         width: 100%;
-        height: 90%;
+        height: 80%;
         margin: 5px;
         float: left;
         margin: 5px;
@@ -45,17 +45,16 @@
         <div id="map" z-index: 2;></div>
     </div>
 
-    <div id="marker_address"></div>
+    <div id="marker_address"></div><button id="copyBtn">복사하기</button>
+    <div id="now_panorama_url"> </div><button id="moveBtn">이동하기</button>
+    
     <div id="streetview_car_address"></div>
-    <button id="copyBtn">복사하기</button>
-
 
 
     <script type="text/javascript"
         src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=xbdzrxswyq&submodules=panorama,geocoder"></script>
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script>
-
         //form 태그에서 파노라마 ID 파싱
         function get_panorama_id() {
             var naver_maps = document.naver_maps;
@@ -89,36 +88,8 @@
             var panorama = new naver.maps.Panorama("pano", panoramaOptions);
             var map = new naver.maps.Map('map', {
                 center: new naver.maps.LatLng(panorama.getPosition()),
-                zoom: 18,
-                mapTypeControlOptions: {
-                    style: naver.maps.MapTypeControlStyle.DROPDOWN
-                }
+                zoom: 18
             });
-            // 거리뷰 레이어를 생성합니다.
-            var streetLayer = new naver.maps.StreetLayer();
-            naver.maps.Event.once(map, 'init_stylemap', function () {
-                streetLayer.setMap(map);
-            });
-
-            // 거리뷰 레이어가 변경되면 발생하는 이벤트를 지도로부터 받아 버튼의 상태를 변경합니다.
-            naver.maps.Event.addListener(map, 'streetLayer_changed', function (streetLayer) {
-                if (streetLayer) {
-                    btn.addClass('control-on');
-                } else {
-                    btn.removeClass('control-on');
-                }
-            });
-
-            // 지도를 클릭했을 때 발생하는 이벤트를 받아 파노라마 위치를 갱신합니다. 이때 거리뷰 레이어가 있을 때만 갱신하도록 합니다.
-            naver.maps.Event.addListener(map, 'rightclick', function (e) {
-                if (streetLayer.getMap()) {
-                    var latlng = e.coord;
-                    // 파노라마의 setPosition()은 해당 위치에서 가장 가까운 파노라마(검색 반경 300미터)를 자동으로 설정합니다.
-                    panorama.setPosition(latlng);
-                }
-            });
-
-
 
             //네이버지도 마커 표시 (거리뷰 이동시)
             var position = new naver.maps.LatLng(panorama.getPosition());
@@ -129,19 +100,36 @@
 
             //거리뷰 pano_changed 이벤트 발생시 네이버 지도 실행
             naver.maps.Event.addListener(panorama, 'pano_changed', function () {
+                var now_panorama_url = "https://map.naver.com/v5/?c=14185421.9777121,4477822.3462987,17,0,0,0,dha&p="
+                now_panorama_url = now_panorama_url + panorama.getPanoId() + ',0,0,80,Float'
+
+                //GPS + 주소값 html 출력
+                var panorama_url_print = document.getElementById('now_panorama_url');
+                panorama_url_print.innerHTML = now_panorama_url;
+
                 var latlng = panorama.getPosition();
                 var now_panorama_location = panorama.getPosition()._lat + ',' + panorama.getPosition()._lng;
-
-                //거리뷰 이동시 위치값 전송
-                $(function () {
-                    var ajax = $.ajax({
-                        type: "GET",
-                        url: "gps_travle.php?gps=" + now_panorama_location
-                    });
-                    ajax.done(function (now_panorama_location) {
-                        $(".console-area").html(now_panorama_location);
-                    });
+                var copyBtn = document.getElementById("copyBtn");
+                copyBtn.addEventListener("click", function () {
+                    var createInput = document.createElement("input");
+                    createInput.setAttribute("type", "marker_gps_address");
+                    document.getElementById("copyBtn").appendChild(createInput);
+                    createInput.value = marker_gps_address;
+                    createInput.select();
+                    document.execCommand('copy');
+                    document.getElementById("copyBtn").removeChild(createInput);
                 });
+
+                // //거리뷰 이동시 위치값 전송
+                // $(function(){
+                //     var ajax = $.ajax({
+                //         type:"GET",
+                //         url:"gps_travle.php?gps="+now_panorama_location
+                //     });
+                //     ajax.done(function(now_panorama_location){
+                //         $(".console-area").html(now_panorama_location);
+                //     });
+                // });
 
                 //마커 가운데 맞춤
                 marker.setPosition(panorama.getPosition())
@@ -171,15 +159,9 @@
                         resultDiv.innerHTML = marker_gps_address;
 
                         //복사하기 이벤트
-                        var copyBtn = document.getElementById("copyBtn");
-                        copyBtn.addEventListener("click", function () {
-                            var createInput = document.createElement("input");
-                            createInput.setAttribute("type", "marker_gps_address");
-                            document.getElementById("copyBtn").appendChild(createInput);
-                            createInput.value = marker_gps_address;
-                            createInput.select();
-                            document.execCommand('copy');
-                            document.getElementById("copyBtn").removeChild(createInput);
+                        var moveBtn = document.getElementById("moveBtn");
+                        moveBtn.addEventListener("click", function () {
+                            window.location = now_panorama_url;
                         });
                     });
                 });
@@ -194,6 +176,8 @@
                 }
             });
         }
+        //1. 네이버맵 로드뷰 실시간 위치로 이동하는 기능 만들다 멈춤
+        //2. 이동하기 버튼 만들다 멈춤
     </script>
 </body>
 

@@ -13,14 +13,15 @@
 
 <body>
     <div id="map" style="width:100%;height:800px;"></div>
-    1. 실시간으로 업데이트 됩니다. (새로고침 필요)<br>
-    2. 현재 페이지에 보이는 기록은 오늘 기준입니다.<br>
-    3. jyh.kr 최상단의 네이버 거리뷰를 사용했을 때 생성되는 로그입니다.<br>
+    <div style="color:black; font-weight: bold; ">1. 오늘 기준으로 탐방한 로드뷰의 기록입니다</div>
+    <div style="color:black; font-weight: bold; ">2. 좌클릭 하면 지도 레이어에 색깔 전환 됩니다. </div>
+    <div style="color:black; font-weight: bold; ">3. 원하는 위치에 우클릭 하면 GPS좌표 얻을 수 있습니다. (-> 해당 좌표를 토대로 네이버맵 검색후 로드뷰 위치 이동) </div>
+    <div id="gps"></div>
 </body>
 
 <?php
     $file_name = date("Ymd");
-    $file_name = 'streetview/' + (string)$file_name."gps.log";
+    $file_name = 'streetview/'.(string)$file_name."gps.log";
 
     $f = fopen($file_name, "r");
 
@@ -84,6 +85,11 @@ $.ajax({
             }
         });
 
+        map.data.addListener('rightclick', function (e) {
+            var latlng = e.coord;
+            var gps = document.getElementById('gps');
+                gps.innerHTML = latlng._lat + " " + latlng._lng;
+        });
 
         map.data.addListener('mouseover', function (e) {
             var feature = e.feature,
