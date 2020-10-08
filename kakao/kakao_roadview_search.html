@@ -51,8 +51,8 @@
 	.MapWalker.m15 .angleBack {background-position: -730px -2px;}
 	#rvWrapper{z-index: 2; position:absolute}
 	#roadview{z-index: 3; position:absolute}
-	#mapWrapper{z-index: 4; position:absolute; width: 30%;  bottom: 0%;}
-	#map{z-index: 5; position:absolute; bottom: 0;}
+	#mapWrapper{z-index: 4; position:absolute; width: 30%;  bottom: 0%; border: 3px solid gray;}
+	#map{z-index: 5; position:absolute; bottom: 0; border: 2px solid gray;}
 </style>
 </head>
 
@@ -63,8 +63,8 @@
 	<div id="rvWrapper" style="width:100%;height:100%;float:left" z-index: 2; position:absolute;>
 		<div id="roadview" style="width:100%;height:100%;" z-index: 3; position:absolute;></div> <!-- 로드뷰를 표시할 div 입니다 -->
 	</div>
-	<div id="mapWrapper" style="position:fixed;height:30%;float:left"z-index: 4; position:absolute;>
-		<div id="map" style="width:100%;height:100%" position:absolute; z-index: 5;></div> <!-- 지도를 표시할 div 입니다 -->
+	<div id="mapWrapper" style="position:fixed;height:45%;float:left"z-index: 4; position:absolute; >
+		<div id="map" style="width:100%;height:100%" position:absolute; z-index: 5; ></div> <!-- 지도를 표시할 div 입니다 -->
 	</div>
 </div>
 
@@ -176,7 +176,6 @@ kakao.maps.event.addListener(roadview, 'init', function() {
 		// 이벤트가 발생할 때마다 로드뷰의 viewpoint값을 읽어, map walker에 반영
 		var viewpoint = roadview.getViewpoint();
 		mapWalker.setAngle(viewpoint.pan);
-
 	});
 
 	// 로드뷰내의 화살표나 점프를 하였을 경우 발생한다.
@@ -186,7 +185,6 @@ kakao.maps.event.addListener(roadview, 'init', function() {
 		var position = roadview.getPosition();
 		mapWalker.setPosition(position);
 		map.setCenter(position);
-
 
 		var roadViewCarAddress = '';
 
@@ -199,29 +197,17 @@ kakao.maps.event.addListener(roadview, 'init', function() {
 				// resultDiv.innerHTML = roadViewCarAddress;
 			}
 		});
-
-
 		lat = position['Ha'];
 		lng = position['Ga'];
 		query_string = lat + "," + lng
-
-		$(function () {
-			var ajax = $.ajax({
-			type: "GET",
-			url: "kakao_gps_travle.php?gps=" + query_string
-			});
-			ajax.done(function (query_string) {
-				$(".console-area").html(query_string);
-			});
-		});
+		gps_sending('1', query_string);
 	});
 
 	//맵 좌클릭시 로드뷰 이동 
 	kakao.maps.event.addListener(map, 'click', function(mouseEvent){
-    var position = mouseEvent.latLng; 
-    mapWalker.setPosition(position);
-    toggleRoadview(position);
-
+		var position = mouseEvent.latLng; 
+		mapWalker.setPosition(position);
+		toggleRoadview(position, roadview.getPosition());
 });
 
 	//맵 우클릭시 위치의 주소 GPS 좌표 반환한다.
@@ -230,6 +216,13 @@ kakao.maps.event.addListener(roadview, 'init', function() {
 		var fullAddress = ''
 		var latlng = mouseEvent.latLng; 
 		marker.setPosition(latlng);
+	
+		lat = latlng['Ha'];
+		lng = latlng['Ga'];
+		query_string = lat + "," + lng
+		gps_sending('2', query_string);
+
+		// gps_sending(query_string);
 
 		searchDetailAddrFromCoords(mouseEvent.latLng, function(result, status) {
 			if (status === kakao.maps.services.Status.OK) {
@@ -256,10 +249,11 @@ function searchDetailAddrFromCoords(coords, callback) {
     geocoder.coord2Address(coords.getLng(), coords.getLat(), callback);
 }
 
-function toggleRoadview(position){
 //전달받은 좌표(position)에 가까운 로드뷰의 panoId를 추출하여 로드뷰를 띄웁니다
+function toggleRoadview(position, roadViewCarAddress){
 roadviewClient.getNearestPanoId(position, 50, function(panoId) {
 	if (panoId === null) {
+		mapWalker.setPosition(roadViewCarAddress);
 		// roadviewContainer.style.display = 'none'; //로드뷰를 넣은 컨테이너를 숨깁니다
 		// mapWrapper.style.width = '40%';
 		// map.relayout();
@@ -306,31 +300,45 @@ function displayArea(name, coordinates){
         strokeWeight: 2,
         strokeColor: '#004c80',
         strokeOpacity: 0.8,
-        fillColor: '#fff',
-        fillOpacity: 0
+        fillColor: '#09f',
+        fillOpacity: 0.1
 	});
 
 	polygons.push(polygon);
-	var polygon_center = centeroid(points);
 
+	//행정구역에 행정동명 표시
+	var polygon_center = centeroid(points);
 	name = name.replace("경기도 이천시 ", "");
 
 	var content = '<div class ="label" style ="color:black; font-weight:bold";><span class="left" ></span><span class="center">' + name + '</span><span class="right"></span></div>';
 	var position = new kakao.maps.LatLng(polygon_center['Ha'], polygon_center['Ga']);  
 	var customOverlay = new kakao.maps.CustomOverlay({
-    position: position,
-    content: content   
+	    position: position,
+    	content: content   
 	});
+
 	customOverlay.setMap(map);
 
-	kakao.maps.event.addListener(polygon, 'mouseover', function(mouseEvent){
-		polygon.setOptions({
-			fillColor : '#09f'
-		});
-	});
-
+    kakao.maps.event.addListener(polygon, 'mouseover', function(mouseEvent) {
+        polygon.setOptions({fillColor: '#fff'});
+    });
+    kakao.maps.event.addListener(polygon, 'mouseout', function() {
+        polygon.setOptions({fillColor: '#09f'});
+    }); 
 }
 
+//index 1 : 로드뷰, index 2 : 우클릭
+function gps_sending(index, query_string){
+	$(function () {
+			var ajax = $.ajax({
+			type: "GET",
+			url: "kakao_gps_travle.php?gps="+index+','+ query_string
+			});
+			ajax.done(function (query_string) {
+				$(".console-area").html(query_string);
+			});
+		});
+}
 
 function centeroid(points){
 	var i, j, len, p1, p2, f, area, x, y;
@@ -347,8 +355,6 @@ function centeroid(points){
 		area += f * 3;
 	}return new kakao.maps.LatLng(x / area, y / area);
 }
-
-
 </script>
 </body>
 </html>

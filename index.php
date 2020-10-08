@@ -32,7 +32,7 @@
 
 <div class="log">
 	<div id="kakao_road_view_log">
-		<h2><a href="http://jyh.kr/kakao/kakao_roadview_log.php" style="display:inline" target="_blank">카카오 로드뷰 로그</a><hr>
+		<h2><a href="http://jyh.kr/kakao/view/kakao_roadview_log.php" style="display:inline" target="_blank">카카오 로드뷰 로그</a><hr>
 	</div>
 	<div id="naver_street_view_log">
 		<h2><a href="http://jyh.kr/naver/naver_streetview_log.php" target="_blank">네이버 거리뷰 로그</a><hr>
@@ -41,7 +41,7 @@
 
 
 <div class="etc">
-	<!-- <h2><a href="http://jyh.kr/naver/naver_map_gps_parsing.php" target="_blank">네이버 거리뷰 GPS 추출</a><hr> -->
+	<h2><a href="http://jyh.kr/naver/naver_map_gps_parsing.php" target="_blank">네이버 거리뷰 GPS 추출</a><hr>
 	<h2><a href="http://jyh.kr/naver/naver_maps_progress.php" target="_blank">10월 07일 진행상황</a><hr>
 	<h2><a href="http://jyh.kr/file/" target="_blank">파일저장소</a><hr>
 </div>
