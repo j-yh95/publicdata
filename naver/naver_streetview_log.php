@@ -24,7 +24,6 @@
     $f = fopen($file_name, "r");
     $gps_logs = fread($f, filesize($file_name));
     fclose($f);
-
     $gps_array = explode("\n", $gps_logs);
 ?>
 
@@ -112,12 +111,14 @@ $.ajax({
     }
 
 //php에서 GPS 로그 받아오기
-var gps_array = <?php echo json_encode($gps_array);?>
-
+var gps_array = <?php echo json_encode($gps_array);?>;
 //마커 생성
+console.log(gps_array);
 for (var i=0; i<gps_array.length; i++){
     if (gps_array[i] != ""){
         gps = gps_array[i].split(',');
+        console.log("sex");
+
         var marker = new naver.maps.Marker({
             position: new naver.maps.LatLng(gps[0], gps[1]),
             map: map

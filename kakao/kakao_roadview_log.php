@@ -9,10 +9,18 @@
     <title>데일리 로드뷰</title>
     <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=xbdzrxswyq&submodules=panorama,geocoder,drawing"></script>
     <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+
+    <style>
+	html, body {
+	margin: 0;
+	height: 100%;
+	overflow: auto;
+	}</style>
+
 </head>
 
 <body>
-    <div id="map" style="width:100%;height:800px;"></div>
+    <div id="map" style="width:100%;height:95%"></div>
     <div id="gps"></div>
 </body>
 
@@ -20,7 +28,6 @@
     $file_name = date("Ymd");
     $file_name = '/var/www/html/data/log/roadview_log/'.(string)$file_name."gps.log";
     $file_server_path = realpath(__FILE__);
-    echo $file_server_path;
 
     $f = fopen($file_name, "r");
     $gps_logs = fread($f, filesize($file_name));
@@ -113,8 +120,8 @@ $.ajax({
     }
 
 //php에서 GPS 로그 받아오기
-var gps_array = <?php echo json_encode($gps_array);?>
-
+var gps_array = <?php echo json_encode($gps_array);?>;
+console.log(gps_array);
 //마커 생성
 for (var i=0; i<gps_array.length; i++){
     if (gps_array[i] != ""){
