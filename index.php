@@ -34,10 +34,15 @@
 	<div id="kakao_road_view_log">
 		<h2><a href="http://jyh.kr/kakao/view/kakao_roadview_log.php" style="display:inline" target="_blank">카카오 로드뷰 로그</a><hr>
 	</div>
+	<div id="kakao_road_view_log">
+		<h2><a href="http://jyh.kr/kakao/view/kakao_upload_gps_log.html" style="display:inline" target="_blank">카카오 로드뷰 로그(직접입력)</a><hr>
+	</div>
 	<div id="naver_street_view_log">
 		<h2><a href="http://jyh.kr/naver/naver_streetview_log.php" target="_blank">네이버 거리뷰 로그</a><hr>
 		</div>
 </div>
+
+
 
 
 <div class="etc">

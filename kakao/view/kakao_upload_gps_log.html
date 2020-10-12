@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>카카오 로드뷰</title>
+	<style>
+		html,
+		body {
+			margin: 0;
+			height: 100%;
+			overflow: auto;
+		}
+
+		#mapWrapper {
+			z-index: 4;
+			position: absolute;
+			width: 100%;
+		}
+
+		#map {
+			z-index: 5;
+			position: absolute;
+			bottom: 0;
+		}
+	</style>
+	<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+	<script type="text/javascript"
+		src="//dapi.kakao.com/v2/maps/sdk.js?appkey=aaad5d4c64cda78f1f24f008bed01025&libraries=services"></script>
+</head>
+
+<body>
+	<button onclick="openTextFile()">GPS File</button> <a href="./tutorial.mp4">사용법</a>
+	<div id="map" style="width:100%;height:97%;"></div>
+	<script>
+
+		function openTextFile() {
+			var input = document.createElement("input");
+			var reader = new FileReader();
+			input.type = "file";
+			input.accept = "text/plain"; // 확장자가 xxx, yyy 일때, ".xxx, .yyy"
+			input.onchange = function (event) {
+				var file = event.target.files[0];
+				reader.onload = function () {
+					gps_array = reader.result;
+					gps_array = gps_array.split("\n");
+					create_marker(gps_array);
+				}
+				reader.readAsText(file, "euc-kr")
+			};
+			input.click();
+		}
+		//create_marker(gps_array);
+
+
+		// 카카오 지도 생성
+		var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+			mapCenter = new kakao.maps.LatLng(37.272211, 127.435087), // 지도의 가운데 좌표
+			mapOption = {
+				center: mapCenter, // 지도의 중심좌표
+				level: 7 // 지도의 확대 레벨
+			};
+
+		// 지도를 표시할 div와  지도 옵션으로  지도를 생성합니다
+		var map = new kakao.maps.Map(mapContainer, mapOption);
+		var marker = new kakao.maps.Marker();
+		var polygons = []
+
+		// 지도 생성 끝
+
+		//행정동 폴리곤
+		$.getJSON("/data/icheon.json", function (geoJson) {
+			var data = geoJson.features;
+			var coordinates = [];
+			var name = ''
+			$.each(data, function (index, val) {
+				coordinates = val.geometry.coordinates;	//WGS84
+				name = val.properties.adm_nm;			//동(ex: 경기도 이천시 증포동)
+
+				displayArea(name, coordinates);
+			})
+		});
+
+		function displayArea(name, coordinates) {
+			var path = [];
+			var points = [];
+
+			$.each(coordinates[0], function (index, coordinate) {
+				var point = new Object();
+				point.x = coordinate[1];
+				point.y = coordinate[0];
+				points.push(point);
+				path.push(new daum.maps.LatLng(coordinate[1], coordinate[0]));
+			})
+
+			var polygon = new daum.maps.Polygon({
+				map: map, // 다각형을 표시할 지도 객체
+				path: path,
+				strokeWeight: 2,
+				strokeColor: '#004c80',
+				strokeOpacity: 0.8,
+				fillColor: '#09f',
+				fillOpacity: 0.1
+			});
+
+			polygons.push(polygon);
+
+			//행정구역에 행정동명 표시
+			var polygon_center = centeroid(points);
+			name = name.replace("경기도 이천시 ", "");
+
+			var content = '<div class ="label" style ="color:black; font-weight:bold";><span class="left" ></span><span class="center">' + name + '</span><span class="right"></span></div>';
+			var position = new kakao.maps.LatLng(polygon_center['Ha'], polygon_center['Ga']);
+			var customOverlay = new kakao.maps.CustomOverlay({
+				position: position,
+				content: content
+			});
+
+			customOverlay.setMap(map);
+
+			kakao.maps.event.addListener(polygon, 'mouseover', function (mouseEvent) {
+				polygon.setOptions({ fillColor: '#fff' });
+			});
+			kakao.maps.event.addListener(polygon, 'mouseout', function () {
+				polygon.setOptions({ fillColor: '#09f' });
+			});
+		}
+
+		// 폴리곤 센터
+		function centeroid(points) {
+			var i, j, len, p1, p2, f, area, x, y;
+
+			area = x = y = 0
+
+			for (i = 0, len = points.length, j = len - 1; i < len; j = i++) {
+				p1 = points[i];
+				p2 = points[j];
+
+				f = p1.y * p2.x - p2.y * p1.x;
+				x += (p1.x + p2.x) * f;
+				y += (p1.y + p2.y) * f;
+				area += f * 3;
+			} return new kakao.maps.LatLng(x / area, y / area);
+		}
+
+
+		// function create_marker(gps_array){
+		//     for (var i=0; i<gps_array.length; i++){
+		//         if (gps_array[i] != ""){
+		//             gps = gps_array[i].split('\t');
+		// 			var markerPosition = new kakao.maps.LatLng(gps[0], gps[1]);
+		// 			var marker = new kakao.maps.Marker({
+		// 				position: markerPosition,
+		// 				});
+		// 			var infowindow = new kakao.maps.infowindow({
+		// 				content: gps[0]+","+gps[1]
+		// 			});
+		// 			kakao.maps.event.addListener(marker, 'mouseover', makeOverListener(map, marker, infowindow));
+		// 		    kakao.maps.event.addListener(marker, 'mouseout', makeOutListener(infowindow));
+		// 			marker.setMap(map);
+		//         }
+		//     }
+		// }
+
+		function create_marker(gps_array) {
+			for (var i = 0; i < gps_array.length; i++) {
+				if (gps_array[i] != "") {
+					gps = gps_array[i].split('\t');
+					var markerPosition = new kakao.maps.LatLng(gps[0], gps[1]);
+					var marker = new kakao.maps.Marker({
+						map: map, // 마커를 표시할 지도
+						position: markerPosition // 마커의 위치
+					});
+
+					// 마커에 표시할 인포윈도우를 생성합니다 
+					var infowindow = new kakao.maps.InfoWindow({
+						content: gps[0]+","+gps[1] // 인포윈도우에 표시할 내용
+					});
+
+					// 마커에 이벤트를 등록하는 함수 만들고 즉시 호출하여 클로저를 만듭니다
+					// 클로저를 만들어 주지 않으면 마지막 마커에만 이벤트가 등록됩니다
+					(function (marker, infowindow) {
+						// 마커에 mouseover 이벤트를 등록하고 마우스 오버 시 인포윈도우를 표시합니다 
+						kakao.maps.event.addListener(marker, 'mouseover', function () {
+							infowindow.open(map, marker);
+						});
+						kakao.maps.event.addListener(marker, 'click', function () {
+							lat = marker.getPosition()['Ha'];
+							lng = marker.getPosition()['Ga'];
+							full_gps = lat + "," + lng
+							copyToClipboard(full_gps)
+						});
+						// 마커에 mouseout 이벤트를 등록하고 마우스 아웃 시 인포윈도우를 닫습니다
+						kakao.maps.event.addListener(marker, 'mouseout', function () {
+							infowindow.close();
+						});
+					})
+						(marker, infowindow);
+				}
+			}
+		}
+		function copyToClipboard(text) {
+			var input = document.body.appendChild(document.createElement("input"));
+			input.value = text;
+			input.focus();
+			input.select();
+			document.execCommand('copy');
+			input.parentNode.removeChild(input);
+		}
+
+	</script>
+</body>
+
+</html>
