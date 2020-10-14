@@ -1,50 +1,56 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 	<meta charset="utf-8">
-	<title>카카오 로드뷰 로그</title>
-
+	<title>전체 조사 현황</title>
 	<style>
-	html, body {
-	margin: 0;
-	height: 100%;
-	overflow: auto;
-	}
-	#mapWrapper{z-index: 4; position:absolute; width: 100%;}
-	#map{z-index: 5; position:absolute; bottom: 0;}	
-</style>
-<script src="http://code.jquery.com/jquery-latest.min.js"></script>
-<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=aaad5d4c64cda78f1f24f008bed01025&libraries=services"></script>
+		html,
+		body {
+			margin: 0;
+			height: 100%;
+			overflow: auto;
+		}
+		#mapWrapper {
+			z-index: 4;
+			position: absolute;
+			width: 100%;
+		}
+		#map {
+			z-index: 5;
+			position: absolute;
+			bottom: 0;
+		}
+	</style>
+	<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+	<script type="text/javascript"
+		src="//dapi.kakao.com/v2/maps/sdk.js?appkey=aaad5d4c64cda78f1f24f008bed01025&libraries=services"></script>
 </head>
 
-
 <?php
-    $file_name = date("Ymd");
-    $file_name = '/var/www/html/data/log/roadview_log/'.(string)$file_name."total_gps.log";
-    $file_server_path = realpath(__FILE__);
-
+    $file_name = '/var/www/html/data/log/progress_log/2020_10_07_progress.log';
     $f = fopen($file_name, "r");
     $gps_logs = fread($f, filesize($file_name));
     fclose($f);
-
     $gps_array = explode("\n", $gps_logs);
+    $unique_gps_array = array_unique($gps_array);
 ?>
 
-
 <body>
-<div id="map" style="width:100%;height:100%;"></div>
-<script>
-var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
-	mapCenter = new kakao.maps.LatLng(37.272211, 127.435087), // 지도의 가운데 좌표
-	mapOption = {
-		center: mapCenter, // 지도의 중심좌표
-		level: 7 // 지도의 확대 레벨
-	};
+	<div id="map" style="width:100%;height:100%;"></div>
+	<script>
+		// 카카오 지도 생성
+		var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+			mapCenter = new kakao.maps.LatLng(37.272211, 127.435087), // 지도의 가운데 좌표
+			mapOption = {
+				center: mapCenter, // 지도의 중심좌표
+				level: 7 // 지도의 확대 레벨
+			};
 
-// 지도를 표시할 div와  지도 옵션으로  지도를 생성합니다
-var map = new kakao.maps.Map(mapContainer, mapOption);
-var marker = new kakao.maps.Marker();
-var polygons = []
+		// 지도를 표시할 div와  지도 옵션으로  지도를 생성합니다
+		var map = new kakao.maps.Map(mapContainer, mapOption);
+		var marker = new kakao.maps.Marker();
+		var polygons = []
 
 //법정동 폴리곤
 $.getJSON("/data/icheon_li.json", function(geoJson){
@@ -53,7 +59,6 @@ $.getJSON("/data/icheon_li.json", function(geoJson){
 	var name = ''
 		$.each(data, function(index, val){
 			coordinates = val.geometry.coordinates;	//WGS84
-			console.log(val.properties.RI_NM);
 			name = val.properties.RI_NM;			//동(ex: 경기도 이천시 증포동)
 			displayArea(name, coordinates);
 		})
@@ -106,11 +111,9 @@ function displayArea(name, coordinates){
 	});
 	customOverlay.setMap(map);
 }
-
 function displayArea2(name, coordinates){
 	var path = [];
 	var points = [];
-
 	$.each(coordinates[0], function(index, coordinate){
 		var point = new Object();
 		point.x = coordinate[1];
@@ -118,15 +121,14 @@ function displayArea2(name, coordinates){
 		points.push(point);
 		path.push(new daum.maps.LatLng(coordinate[1], coordinate[0]));
 	})
-
 	var polygon = new daum.maps.Polygon({
-        map: map, // 다각형을 표시할 지도 객체
-        path: path,
-        strokeWeight: 2,
-        strokeColor: '#004c80',
-        strokeOpacity: 0.8,
-        fillColor: '#09f',
-        fillOpacity: 0.1
+		map: map, // 다각형을 표시할 지도 객체
+		path: path,
+		strokeWeight: 2,
+		strokeColor: '#004c80',
+		strokeOpacity: 0.8,
+		fillColor: '#09f',
+		fillOpacity: 0.1
 	});
 
 	polygons.push(polygon);
@@ -141,6 +143,7 @@ function displayArea2(name, coordinates){
     	content: content   
 	});
 	customOverlay.setMap(map);
+	
     kakao.maps.event.addListener(polygon, 'mouseover', function(mouseEvent) {
         polygon.setOptions({fillColor: '#fff'});
     });
@@ -164,75 +167,32 @@ function centeroid(points){
 		area += f * 3;
 	}return new kakao.maps.LatLng(x / area, y / area);
 }
+
 var markers = [];
 var gps_array = <?php echo json_encode($gps_array);?>
-//마커 생성
-create_marker(gps_array);
-function create_marker(gps_array) {
 
+create_marker(gps_array);
+
+function create_marker(gps_array) {
 	var unique_gps_array = [];
 	$.each(gps_array, function(i, el){
 		if($.inArray(el, unique_gps_array) === -1) unique_gps_array.push(el);
 	});
-				for (var i = 0; i < unique_gps_array.length; i++) {
-					if (unique_gps_array[i] != "") {
-						gps = unique_gps_array[i].split(',');
-						var markerPosition = new kakao.maps.LatLng(gps[1], gps[2]);
-						var marker = new kakao.maps.Marker({
-							map: map, // 마커를 표시할 지도
-							position: markerPosition // 마커의 위치
-						});
-						markers.push(marker);
-
-						// 마커에 표시할 인포윈도우를 생성합니다 
-						var infowindow = new kakao.maps.InfoWindow({
-							content: gps[1]+","+gps[2] // 인포윈도우에 표시할 내용
-						});
-
-						// 마커에 이벤트를 등록하는 함수 만들고 즉시 호출하여 클로저를 만듭니다
-						// 클로저를 만들어 주지 않으면 마지막 마커에만 이벤트가 등록됩니다
-						(function (marker, infowindow) {
-							// 마커에 mouseover 이벤트를 등록하고 마우스 오버 시 인포윈도우를 표시합니다 
-							kakao.maps.event.addListener(marker, 'mouseover', function () {
-								infowindow.open(map, marker);
-							});
-							kakao.maps.event.addListener(marker, 'click', function () {
-								lat = marker.getPosition()['Ha'];
-								lng = marker.getPosition()['Ga'];
-								full_gps = lat + "," + lng
-								copyToClipboard(full_gps)
-							});
-							// 마커에 mouseout 이벤트를 등록하고 마우스 아웃 시 인포윈도우를 닫습니다
-							kakao.maps.event.addListener(marker, 'mouseout', function () {
-								infowindow.close();
-							});
-						})
-							(marker, infowindow);
-					}
-				}
-			}
-function copyToClipboard(text) {
-	var input = document.body.appendChild(document.createElement("input"));
-	input.value = text;
-	input.focus();
-	input.select();
-	document.execCommand('copy');
-	input.parentNode.removeChild(input);
-}
-function setMarkers(map) {
-	for (var i = 0; i < markers.length; i++) {
-		markers[i].setMap(map);
-	}            
+	
+	for (var i = 0; i < unique_gps_array.length; i++) {
+		if (unique_gps_array[i] != "") {
+			gps = unique_gps_array[i].split(',');
+			var markerPosition = new kakao.maps.LatLng(gps[0], gps[1]);
+			var marker = new kakao.maps.Marker({
+				map: map, // 마커를 표시할 지도
+				position: markerPosition // 마커의 위치
+			});
+			markers.push(marker);
+		}
+	}
 }
 
-function showMarkers() {
-    setMarkers(map)    
-}
-
-function hideMarkers() {
-    setMarkers(null);    
-}
-
-</script>
+	</script>
 </body>
+
 </html>

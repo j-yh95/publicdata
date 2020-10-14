@@ -74,7 +74,6 @@ kakao.maps.event.addListener(map, 'click', function(mouseEvent) {
 				// 가상으로 붙여주었던 input 태그를 제거해줍니다.
 				document.getElementById("copyBtn_1").removeChild(createInput);
 				});
-
 		};
 		//변환 끝
 		geocoder.coord2Address(coord.getLng(), coord.getLat(), callback);

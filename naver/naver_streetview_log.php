@@ -117,7 +117,6 @@ console.log(gps_array);
 for (var i=0; i<gps_array.length; i++){
     if (gps_array[i] != ""){
         gps = gps_array[i].split(',');
-        console.log("sex");
 
         var marker = new naver.maps.Marker({
             position: new naver.maps.LatLng(gps[0], gps[1]),

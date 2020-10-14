@@ -14,8 +14,8 @@
 	.map_wrap {overflow:hidden; height:90%; z-index:1}
 	/* 지도위에 로드뷰의 위치와 각도를 표시하기 위한 map walker 아이콘의 스타일 */
 	.MapWalker {position:absolute;margin:-26px 0 0 -51px}
-	.MapWalker .figure {position:absolute;width:25px;left:38px;top:-2px;
-		height:39px;background:url(https://t1.daumcdn.net/localimg/localimages/07/2018/pc/roadview_minimap_wk_2018.png) -298px -114px no-repeat}
+	/* .MapWalker .figure {position:absolute;width:25px;left:38px;top:-2px;
+		height:39px;background:url(https://t1.daumcdn.net/localimg/localimages/07/2018/pc/roadview_minimap_wk_2018.png) -298px -114px no-repeat} */
 	.MapWalker .angleBack {width:102px;height:52px;background: url(https://t1.daumcdn.net/localimg/localimages/07/2018/pc/roadview_minimap_wk_2018.png) -834px -2px no-repeat;}
 	.MapWalker.m0 .figure {background-position: -298px -114px;}
 	.MapWalker.m1 .figure {background-position: -335px -114px;}
@@ -59,15 +59,13 @@
 <!--로드뷰 좌표 받아서 움직여주기 기능 포함시키기-->
 
 <body>
-
-	<!-- <form method="post">
-		<div></div>
-		<input tabindex="1" style="width: 960px;" type="text" placeholder="37.272211,127.435087" name="a"/>
-		<button tabindex="2" type="submit">입력</button>
-	</form> -->
-
+	<form id="roadViewChanger">
+		<input tabindex="1" name="gpsAddress" tabindex="1" style="width: 960px;" type="text" placeholder="37.272211,127.435087" />
+		<input type = "button" tabindex="2" tabindex="2" onclick="changeRoadview()" value="클릭">		
+		<input type = "button" tabindex="2" tabindex="2" onclick="moveKakaoRoadview()" value="카카오맵 보기">
+	</form>
 <div class="map_wrap" z-index: 1;>
-	<div id="rvWrapper" style="width:100%;height:100%;float:left;bottom:0;" z-index: 2; position:absolute;>
+	<div id="rvWrapper" style="width:100%;height:97%;float:left;bottom:0;" z-index: 2; position:absolute;>
 		<div id="roadview" style="width:100%;height:100%;" z-index: 3; position:absolute;></div> <!-- 로드뷰를 표시할 div 입니다 -->
 	</div>
 	<div id="mapWrapper" style="position:fixed;height:45%;float:left"z-index: 4; position:absolute; >
@@ -75,17 +73,10 @@
 	</div>
 </div>
 
-<!-- <div>
-	<div style="display:inline; color:blue; font-weight: bold;" >로드뷰 자동차 위치 :</div>
-		<div id="roadViewCarAddress" style="display:inline;"></div>
-</div>
-<div>
-	<div style="display:inline; color:blue; font-weight: bold;">마커 위치 : </div>
-		<div id="markerAddress" style="display:inline;"></div>
-</div> -->
 <script src="http://code.jquery.com/jquery-latest.min.js"></script>
 <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=aaad5d4c64cda78f1f24f008bed01025&libraries=services"></script>
 <script>
+
 //지도위에 현재 로드뷰의 위치와, 각도를 표시하기 위한 map walker 아이콘 생성 클래스
 function MapWalker(position){
 	//커스텀 오버레이에 사용할 map walker 엘리먼트
@@ -171,7 +162,6 @@ var geocoder = new kakao.maps.services.Geocoder();
 
 // 로드뷰의 초기화 되었을때 map walker를 생성한다.
 kakao.maps.event.addListener(roadview, 'init', function() {
-	
 	// map walker를 생성한다. 생성시 지도의 중심좌표를 넘긴다.
 	mapWalker = new MapWalker(mapCenter);
 	mapWalker.setMap(map); // map walker를 지도에 설정한다.
@@ -194,16 +184,15 @@ kakao.maps.event.addListener(roadview, 'init', function() {
 		map.setCenter(position);
 
 		var roadViewCarAddress = '';
-
 		roadViewCarAddress = position
 		searchDetailAddrFromCoords(position, function(result, status) {
 			if (status === kakao.maps.services.Status.OK) {
 				var address = result[0].address.address_name
 				var roadViewCarAddress = address + '\t' + position['Ha'] + '\t' + position['Ga'];
-				// var resultDiv = document.getElementById('roadViewCarAddress'); 
-				// resultDiv.innerHTML = roadViewCarAddress;
 			}
 		});
+
+
 		lat = position['Ha'];
 		lng = position['Ga'];
 		query_string = lat + "," + lng
@@ -276,20 +265,34 @@ roadviewClient.getNearestPanoId(position, 50, function(panoId) {
 
 var polygons = []
 
-//행정동 폴리곤
-$.getJSON("/data/icheon.json", function(geoJson){
+//법정동 geoJSON 받아오기
+$.getJSON("/data/icheon_dong.json", function(geoJson){
 	var data = geoJson.features;
 	var coordinates = [];
 	var name = ''
 		$.each(data, function(index, val){
 			coordinates = val.geometry.coordinates;	//WGS84
-			name = val.properties.adm_nm;			//동(ex: 경기도 이천시 증포동)
+			name = val.properties.EMD_NM;			//동(ex: 경기도 이천시 증포동)
 
-			displayArea(name, coordinates);
+			displayDongArea(name, coordinates);
 		})
     });
 
-function displayArea(name, coordinates){
+//법정리 geoJSON 받아오기
+$.getJSON("/data/icheon_li.json", function(geoJson){
+var data = geoJson.features;
+var coordinates = [];
+var name = ''
+	$.each(data, function(index, val){
+		coordinates = val.geometry.coordinates;	//WGS84
+		name = val.properties.RI_NM;			//동(ex: 경기도 이천시 증포동)
+
+		displayLiArea(name, coordinates);
+	})
+});
+
+//법정동 폴리곤 생성
+function displayDongArea(name, coordinates){
 	var path = [];
 	var points = [];
 
@@ -313,11 +316,9 @@ function displayArea(name, coordinates){
 
 	polygons.push(polygon);
 
-	//행정구역에 행정동명 표시
-	var polygon_center = centeroid(points);
-	name = name.replace("경기도 이천시 ", "");
-
-	var content = '<div class ="label" style ="color:black; font-weight:bold";><span class="left" ></span><span class="center">' + name + '</span><span class="right"></span></div>';
+	//법정동명 표시
+	var polygon_center = centeroid(points); 
+	var content = '<div class ="label" style ="color:black; font-weight:bold; background-color: rgba( 255, 255, 0, 0.3 );><span class="left"></span><span class="center">' + name + '</span><span class="right"></span></div>';
 	var position = new kakao.maps.LatLng(polygon_center['Ha'], polygon_center['Ga']);  
 	var customOverlay = new kakao.maps.CustomOverlay({
 	    position: position,
@@ -332,6 +333,42 @@ function displayArea(name, coordinates){
     kakao.maps.event.addListener(polygon, 'mouseout', function() {
         polygon.setOptions({fillColor: '#09f'});
     }); 
+}
+
+function displayLiArea(name, coordinates){
+	var path = [];
+	var points = [];
+
+	$.each(coordinates[0], function(index, coordinate){
+		var point = new Object();
+		point.x = coordinate[1];
+		point.y = coordinate[0];
+		points.push(point);
+		path.push(new daum.maps.LatLng(coordinate[1], coordinate[0]));
+	})
+
+	var polygon = new daum.maps.Polygon({
+        map: map, // 다각형을 표시할 지도 객체
+        path: path,
+        strokeWeight: 0.6,
+        strokeColor: '#ff0f01',
+        strokeOpacity: 0.8,
+        fillColor: '#09f',
+        fillOpacity: 0
+	});
+
+	polygons.push(polygon);
+
+	//법정리에 법정리명 표시
+	var polygon_center = centeroid(points);
+
+	var content = '<div class ="label" style ="color:white; font-size: small; background-color: rgba( 10, 10, 10, 0.3 );><span class="left"></span><span class="center">' + name + '</span><span class="right"></span></div>';
+	var position = new kakao.maps.LatLng(polygon_center['Ha'], polygon_center['Ga']);  
+	var customOverlay = new kakao.maps.CustomOverlay({
+	    position: position,
+    	content: content   
+	});
+	customOverlay.setMap(map);
 }
 
 //index 1 : 로드뷰, index 2 : 우클릭
@@ -362,6 +399,22 @@ function centeroid(points){
 		area += f * 3;
 	}return new kakao.maps.LatLng(x / area, y / area);
 }
+
+function changeRoadview(){
+	var gpsAddress = document.getElementById("roadViewChanger").gpsAddress.value;
+	gpsAddress = gpsAddress.split(",")
+	var position = new kakao.maps.LatLng(gpsAddress[0], gpsAddress[1]);
+	roadviewClient.getNearestPanoId(position, 50, function(panoId) {
+		roadview.setPanoId(panoId, position);
+		console.log(position);
+	});
+}
+
+function moveKakaoRoadview(){
+	var panoId = roadview.getPanoId();
+	window.open('https://map.kakao.com/?panoid='+panoId);
+}
+
 </script>
 </body>
 </html>

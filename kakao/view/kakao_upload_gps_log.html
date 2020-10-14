@@ -3,7 +3,7 @@
 
 <head>
 	<meta charset="utf-8">
-	<title>카카오 로드뷰</title>
+	<title>카카오 로드뷰 로그 업로드</title>
 	<style>
 		html,
 		body {
@@ -75,7 +75,7 @@
 			var name = ''
 			$.each(data, function (index, val) {
 				coordinates = val.geometry.coordinates;	//WGS84
-				name = val.properties.adm_nm;			//동(ex: 경기도 이천시 증포동)
+				name = val.properties.EMD_NM;			//동(ex: 경기도 이천시 증포동)
 
 				displayArea(name, coordinates);
 			})
@@ -107,8 +107,6 @@
 
 			//행정구역에 행정동명 표시
 			var polygon_center = centeroid(points);
-			name = name.replace("경기도 이천시 ", "");
-
 			var content = '<div class ="label" style ="color:black; font-weight:bold";><span class="left" ></span><span class="center">' + name + '</span><span class="right"></span></div>';
 			var position = new kakao.maps.LatLng(polygon_center['Ha'], polygon_center['Ga']);
 			var customOverlay = new kakao.maps.CustomOverlay({
@@ -142,29 +140,15 @@
 				area += f * 3;
 			} return new kakao.maps.LatLng(x / area, y / area);
 		}
-
-
-		// function create_marker(gps_array){
-		//     for (var i=0; i<gps_array.length; i++){
-		//         if (gps_array[i] != ""){
-		//             gps = gps_array[i].split('\t');
-		// 			var markerPosition = new kakao.maps.LatLng(gps[0], gps[1]);
-		// 			var marker = new kakao.maps.Marker({
-		// 				position: markerPosition,
-		// 				});
-		// 			var infowindow = new kakao.maps.infowindow({
-		// 				content: gps[0]+","+gps[1]
-		// 			});
-		// 			kakao.maps.event.addListener(marker, 'mouseover', makeOverListener(map, marker, infowindow));
-		// 		    kakao.maps.event.addListener(marker, 'mouseout', makeOutListener(infowindow));
-		// 			marker.setMap(map);
-		//         }
-		//     }
-		// }
-
 		function create_marker(gps_array) {
-			for (var i = 0; i < gps_array.length; i++) {
-				if (gps_array[i] != "") {
+
+			var unique_gps_array = [];
+			$.each(gps_array, function (i, el) {
+				if ($.inArray(el, unique_gps_array) === -1) unique_gps_array.push(el);
+			});
+
+			for (var i = 0; i < unique_gps_array.length; i++) {
+				if (unique_gps_array[i] != "") {
 					gps = gps_array[i].split('\t');
 					var markerPosition = new kakao.maps.LatLng(gps[0], gps[1]);
 					var marker = new kakao.maps.Marker({
@@ -174,7 +158,7 @@
 
 					// 마커에 표시할 인포윈도우를 생성합니다 
 					var infowindow = new kakao.maps.InfoWindow({
-						content: gps[0]+","+gps[1] // 인포윈도우에 표시할 내용
+						content: gps[0] + "," + gps[1] // 인포윈도우에 표시할 내용
 					});
 
 					// 마커에 이벤트를 등록하는 함수 만들고 즉시 호출하여 클로저를 만듭니다
