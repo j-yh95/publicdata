@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<title>카카오 로드뷰</title>
-
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
 	<style>
 	html, body {
 	margin: 0;
@@ -49,34 +49,34 @@
 	.MapWalker.m13 .angleBack {background-position: -522px -2px;}
 	.MapWalker.m14 .angleBack {background-position: -626px -2px;}
 	.MapWalker.m15 .angleBack {background-position: -730px -2px;}
-	#rvWrapper{z-index: 2; position:absolute}
-	#roadview{z-index: 3; position:absolute}
-	#mapWrapper{z-index: 4; position:absolute; width: 30%;  bottom: 0%; border: 3px solid gray;}
-	#map{z-index: 5; position:absolute; bottom: 0; border: 2px solid gray;}
+	#rvWrapper{z-index: 2; position:absolute;}
+	#roadview{z-index: 3; position:absolute;}
+	#buttons{z-index: 4; position: absolute; top:5px; right:20px; }
+	#map{position:absolute; overflow:auto; bottom:0px; left:0px; width:500px; height:400px; z-index:4; border:1px solid #909090;box-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);border-radius: 5px;margin:0;padding:0;visibility: hidden;}
+	#rsz {position: absolute;right: 0;top: 0;width:36px;height:36px;background:url(https://t1.daumcdn.net/localimg/localimages/07/2018/pc/roadview/ico_roadview22x_190625.png) -100px -181px no-repeat;background-size:200px auto;z-index: 5; cursor:nesw-resize;}
+
 </style>
 </head>
-
 <body>
-	<div id = "buttons" style= "width:100%; height:3%; ">
-	<form id="roadViewChanger">
-		<!-- <input tabindex="1" name="gpsAddress" tabindex="1" style="width: 960px;" type="text" placeholder="37.272211,127.435087" /> -->
-		<!-- <input type = "button" tabindex="2" onclick="changeRoadview()" value="이동"> -->
-		<input type = "button" tabindex="1" onclick="moveKakaoRoadview()" value="카카오맵으로 보기">
-		<input type = "button" tabindex="1" onclick="moveNaverStreetview()" value="네이버맵으로 보기">
-		<input type = "button" tabindex="2" onclick="createAgoMarker(0)" value="로드뷰 + 마우스 우클릭">
-		<input type = "button" tabindex="3" onclick="createAgoMarker(1)" value="로드뷰">
-		<input type = "button" tabindex="4" onclick="createAgoMarker(2)" value="마우스 우클릭">
-		<input type = "button" tabindex="5" onclick="removeAgoMarker()" value="기록 삭제">
-	</form>
+
+<div id = "buttons">
+		<button type="button" class = "btn btn-dark" onclick="moveKakaoRoadview()">카카오</button>
+		<button type="button" class = "btn btn-dark" onclick="moveNaverStreetview()">네이버</button>
+		<button type="button" class = "btn btn-dark" onclick="createAgoMarker(0)">로드뷰/마우스</button>
+		<button type="button"  class = "btn btn-dark" onclick="createAgoMarker(1)">로드뷰</button>
+		<button type="button" class = "btn btn-dark" onclick="createAgoMarker(2)">마우스</button>
+		<button type="button" class = "btn btn-dark" onclick="removeAgoMarker()">마커 제거</button>
+	</div>
 </div>
+
+
 <div id="pano" style="width:0px; height:0px;"></div>
 
-<div class="map_wrap" z-index: 1;>
-	<div id="rvWrapper" style="width:100%;height:97%;float:left;bottom:0;" z-index: 2; position:absolute;>
-		<div id="roadview" style="width:100%;height:100%;" z-index: 3; position:absolute;></div> <!-- 로드뷰를 표시할 div 입니다 -->
-	</div>
-	<div id="mapWrapper" style="position:fixed;height:45%;float:left"z-index: 4; position:absolute; >
-		<div id="map" style="width:100%;height:100%" position:absolute; z-index: 5; ></div> <!-- 지도를 표시할 div 입니다 -->
+<div id="mapwrap" z-index: 1;>
+	<div id="roadview" style="position: absolute; left: 0px; bottom: 0px; width: 100%; height: 100%; " z-index: 2; position:absolute;></div> 
+	<div id="map" style="overflow: hidden; visibility: visible; position:absolute;" z-index: 3;> 
+		<div id ="rsz"></div>
+		<div style="position: absolute; z-index: 1; width: 100%; height: 0px; transform: translateZ(0px);"></div>
 	</div>
 </div>
 
@@ -112,8 +112,6 @@ function MapWalker(position){
 	this.content = content;
 }
 
-
-
 //로드뷰의 pan(좌우 각도)값에 따라 map walker의 백그라운드 이미지를 변경 시키는 함수
 //background로 사용할 sprite 이미지에 따라 계산 식은 달라 질 수 있음
 MapWalker.prototype.setAngle = function(angle){
@@ -139,9 +137,6 @@ MapWalker.prototype.setMap = function(map){
 	this.walker.setMap(map);
 };
 
-	/*
-	* 아래부터 실제 지도와 로드뷰 map walker를 생성 및 제어하는 로직
-	*/
 var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
 	mapCenter = new kakao.maps.LatLng(37.272211, 127.435087), // 지도의 가운데 좌표
 	mapOption = {
@@ -170,23 +165,17 @@ var geocoder = new kakao.maps.services.Geocoder();
 
 // 로드뷰의 초기화 되었을때 map walker를 생성한다.
 kakao.maps.event.addListener(roadview, 'init', function() {
-	// map walker를 생성한다. 생성시 지도의 중심좌표를 넘긴다.
 	mapWalker = new MapWalker(mapCenter);
 	mapWalker.setMap(map); // map walker를 지도에 설정한다.
 
 	// 로드뷰가 초기화 된 후, 추가 이벤트를 등록한다.
-	// 로드뷰를 상,하,좌,우,줌인,줌아웃을 할 경우 발생한다.
-	// 로드뷰를 조작할때 발생하는 값을 받아 map walker의 상태를 변경해 준다.
 	kakao.maps.event.addListener(roadview, 'viewpoint_changed', function(){
-		// 이벤트가 발생할 때마다 로드뷰의 viewpoint값을 읽어, map walker에 반영
-		var viewpoint = roadview.getViewpoint();
+		var viewpoint = roadview.getViewpoint();	// 이벤트가 발생할 때마다 로드뷰의 viewpoint값을 읽어, map walker에 반영
 		mapWalker.setAngle(viewpoint.pan);
 	});
 
 	// 로드뷰내의 화살표나 점프를 하였을 경우 발생한다.
-	// position값이 바뀔 때마다 map walker의 상태를 변경해 준다.
 	kakao.maps.event.addListener(roadview, 'position_changed', function(){
-		// 이벤트가 발생할 때마다 로드뷰의 position값을 읽어, map walker에 반영 
 		var position = roadview.getPosition();
 		mapWalker.setPosition(position);
 		map.setCenter(position);
@@ -199,7 +188,6 @@ kakao.maps.event.addListener(roadview, 'init', function() {
 				var roadViewCarAddress = address + '\t' + position['Ha'] + '\t' + position['Ga'];
 			}
 		});
-
 
 		lat = position['Ha'];
 		lng = position['Ga'];
@@ -240,6 +228,44 @@ kakao.maps.event.addListener(roadview, 'init', function() {
 	});
 });
 
+//미니맵 리사이징
+var doc = document;
+var ht = 400;
+var wd = 400;
+var main = document.querySelector('#map'), x, y, dx, dy;
+
+var startResize = function(event){
+	x = event.screenX;
+	y = event.screenY;
+};
+
+var resize = function(event){
+	dx = event.screenX - x;
+	dy = event.screenY - y;
+	x = event.screenX;
+	y = event.screenY;
+	wd += dx;
+	ht -= dy;
+	main.style.width = wd + "px";
+	main.style.height = ht + "px";
+
+	map.relayout();
+	var position = roadview.getPosition();
+	mapWalker.setPosition(position);
+	map.setCenter(position);
+};
+
+rsz.addEventListener("mousedown", function(event){
+	startResize(event);
+	doc.body.addEventListener("mousemove", resize);
+	doc.body.addEventListener("mouseup", function(){
+	doc.body.removeEventListener("mousemove", resize);
+	});
+	// resize 이벤트가 종료된 후 로드뷰의 중앙으로 지도 옮기기
+
+});
+
+
 function copyToClipboard(text) {
   var input = document.body.appendChild(document.createElement("input"));
   input.value = text;
@@ -262,7 +288,7 @@ roadviewClient.getNearestPanoId(position, 50, function(panoId) {
 		// mapWrapper.style.width = '40%';
 		// map.relayout();
 	} else {
-		mapWrapper.style.width = '30%';
+		// map.style.width = '100%';
 		map.relayout(); //지도를 감싸고 있는 영역이 변경됨에 따라, 지도를 재배열합니다
 		roadviewContainer.style.display = 'block'; //로드뷰를 넣은 컨테이너를 보이게합니다
 		roadview.setPanoId(panoId, position); //panoId를 통한 로드뷰 실행
