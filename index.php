@@ -34,10 +34,12 @@
 
 <div id="kakao">
 	<h2 style="display:inline"> 
-	<a href="http://jyh.kr/kakao/kakao_roadview_search.html"  target="_blank">카카오 로드뷰</a> /
-	<a href="http://jyh.kr/kakao/view/kakao_roadview_log.php" style="display:inline" target="_blank">로드뷰 로그</a> /
-	<a href="http://jyh.kr/kakao/view/kakao_progress_log.php" style="display:inline" target="_blank">전체 조사 현황</a> / 
-	<a href="http://jyh.kr/kakao/view/kakao_upload_gps_log.html" style="display:inline" target="_blank">로그 직접입력</a> / 
+	<a href="http://jyh.kr/kakao/kakao_roadview_search.html" 		style="background-color:ffe812;"  		target="_blank">카카오 로드뷰</a> /
+	<a href="http://jyh.kr/kakao/view/kakao_roadview_log.php" 												target="_blank">로드뷰 로그</a> /
+	<a href="http://jyh.kr/kakao/view/kakao_progress_log.php" 												target="_blank">전체 조사 현황</a> / 
+	<a href="http://jyh.kr/kakao/view/kakao_upload_gps_log.html" 											target="_blank">로그 직접입력</a> / 
+	<a href="http://jyh.kr/naver/naver_streetview_search.html" 		style="color:#2DB400;" 					target="_blank">네이버 거리뷰</a> / 
+	<a href="http://jyh.kr/naver/naver_map_gps_parsing.php" 		style="color:#2DB400;" 					target="_blank">네이버 GPS 검색</a> / 
 	<a href="http://jyh.kr/file/" target="_blank">파일저장소</a><hr>
 
 </div>
@@ -52,10 +54,9 @@ var mapContainer = document.getElementById('map'), // 지도를 표시할 div
         center: new kakao.maps.LatLng(37.20215449091, 127.5104094269966), // 지도의 중심좌표
         level: 8 // 지도의 확대 레벨
     };
-	var map = new kakao.maps.Map(mapContainer, mapOption); 
+var map = new kakao.maps.Map(mapContainer, mapOption); 
 
 
-	var polygons = []
 
 //법정동 geoJSON 받아오기
 $.getJSON("/data/icheon_dong.json", function(geoJson){
@@ -85,6 +86,7 @@ var name = ''
 
 var successDong = ["증포동", "진리동", "안흥동", "관고동", "송정동", "중리동", "창전동", "갈산동", "율현동"];
 var successLi = ["조읍리", "모전리", "경사리", "도립리", "현방리", "상용리", "내촌리", "사동리", "대흥리", "대대리", "가산리", "제요리", "이평리", "해월리", "덕평리", "송계리", "금당리", "장능리", "대죽리", "수산리", "상봉리", "신필리", "장천리", "행죽리", "암산리", "자석리", "응암리", "송온리", "수정리", "죽당리", "송말리", "백우리", "신대리", "도지리", "우곡리", "신원리", "고백리", "대관리", "무촌리"];
+var polygons = []
 
 //법정동 폴리곤 생성
 function displayDongArea(name, coordinates){
@@ -99,6 +101,7 @@ function displayDongArea(name, coordinates){
 		points.push(point);
 		path.push(new daum.maps.LatLng(coordinate[1], coordinate[0]));
 	})
+
 	for (i=0; i<successDong.length; i++){
 		if(name == successDong[i]){
 			var polygon = new daum.maps.Polygon({
@@ -108,9 +111,8 @@ function displayDongArea(name, coordinates){
 				strokeColor: '#004c80',
 				strokeOpacity: 3,
 				fillColor: '#020000',
-				fillOpacity: 0.6
+				fillOpacity: 0.8
 			});
-			tempSuccessDong.push(name)
 		}
 	}
 	var polygon = new daum.maps.Polygon({
@@ -148,17 +150,16 @@ function displayLiArea(name, coordinates){
 		path.push(new daum.maps.LatLng(coordinate[1], coordinate[0]));
 	})
 
-
 	for (i=0; i<successLi.length; i++){
 		if(name == successLi[i]){
 			var polygon = new daum.maps.Polygon({
 				map: map, 
 				path: path,
-				strokeWeight: 2,
-				strokeColor: '#004c80',
+				strokeWeight: 0.3,
+				strokeColor: '#ff0f01',
 				strokeOpacity: 0.8,
 				fillColor: '#020000',
-				fillOpacity: 0.6
+				fillOpacity: 0.75
 			});
 		}
 	}

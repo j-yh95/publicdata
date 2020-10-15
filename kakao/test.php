@@ -56,21 +56,29 @@
 </style>
 </head>
 
-<body>
-	<div id = "buttons" style= "width:100%; height:3%; ">
-	<form id="roadViewChanger">
-		<!-- <input tabindex="1" name="gpsAddress" tabindex="1" style="width: 960px;" type="text" placeholder="37.272211,127.435087" /> -->
-		<!-- <input type = "button" tabindex="2" onclick="changeRoadview()" value="이동"> -->
-		<input type = "button" tabindex="1" onclick="moveKakaoRoadview()" value="카카오맵으로 보기">
-		<input type = "button" tabindex="1" onclick="moveNaverStreetview()" value="네이버맵으로 보기">
-		<input type = "button" tabindex="2" onclick="createAgoMarker(0)" value="로드뷰 + 마우스 우클릭">
-		<input type = "button" tabindex="3" onclick="createAgoMarker(1)" value="로드뷰">
-		<input type = "button" tabindex="4" onclick="createAgoMarker(2)" value="마우스 우클릭">
-		<input type = "button" tabindex="5" onclick="removeAgoMarker()" value="기록 삭제">
-	</form>
-</div>
-<div id="pano" style="width:0px; height:0px;"></div>
+<!--로드뷰 좌표 받아서 움직여주기 기능 포함시키기-->
 
+<?php
+    $file_name = date("Ymd");
+    $file_name = '/var/www/html/data/log/roadview_log/'.(string)$file_name."total_gps.log";
+    $file_server_path = realpath(__FILE__);
+
+    $f = fopen($file_name, "r");
+    $gps_logs = fread($f, filesize($file_name));
+    fclose($f);
+
+    $gps_array = explode("\n", $gps_logs);
+?>
+
+
+<body>
+	<form id="roadViewChanger">
+		<input tabindex="1" name="gpsAddress" tabindex="1" style="width: 960px;" type="text" placeholder="37.272211,127.435087" />
+		<input type = "button" tabindex="2" onclick="changeRoadview()" value="클릭">		
+		<input type = "button" tabindex="3" onclick="moveKakaoRoadview()" value="카카오맵 보기">
+		<input type = "button" tabindex="4" onclick="createAgoMarker()" value="이전 기록">
+		<input type = "button" tabindex="4" onclick="removeAgoMarker()" value="기록 삭제">
+	</form>
 <div class="map_wrap" z-index: 1;>
 	<div id="rvWrapper" style="width:100%;height:97%;float:left;bottom:0;" z-index: 2; position:absolute;>
 		<div id="roadview" style="width:100%;height:100%;" z-index: 3; position:absolute;></div> <!-- 로드뷰를 표시할 div 입니다 -->
@@ -80,8 +88,6 @@
 	</div>
 </div>
 
-
-<script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=xbdzrxswyq&submodules=panorama"></script>
 <script src="http://code.jquery.com/jquery-latest.min.js"></script>
 <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=aaad5d4c64cda78f1f24f008bed01025&libraries=services"></script>
 <script>
@@ -408,36 +414,23 @@ function centeroid(points){
 	}return new kakao.maps.LatLng(x / area, y / area);
 }
 
-// function changeRoadview(){
-// 	var gpsAddress = document.getElementById("roadViewChanger").gpsAddress.value;
-// 	gpsAddress = gpsAddress.split(",")
-// 	var position = new kakao.maps.LatLng(gpsAddress[0], gpsAddress[1]);
-// 	roadviewClient.getNearestPanoId(position, 50, function(panoId) {
-// 		roadview.setPanoId(panoId, position);
-// 		console.log(position);
-// 	});
-// }
+function changeRoadview(){
+	var gpsAddress = document.getElementById("roadViewChanger").gpsAddress.value;
+	gpsAddress = gpsAddress.split(",")
+	var position = new kakao.maps.LatLng(gpsAddress[0], gpsAddress[1]);
+	roadviewClient.getNearestPanoId(position, 50, function(panoId) {
+		roadview.setPanoId(panoId, position);
+		console.log(position);
+	});
+}
 
 function moveKakaoRoadview(){
 	var panoId = roadview.getPanoId();
 	window.open('https://map.kakao.com/?panoid='+panoId);
 }
 
-function moveNaverStreetview(){
-	var coords = roadview.getPosition();
-	var pano = null;
-	var pano = new naver.maps.Panorama("pano", {
-		position: new naver.maps.LatLng(coords['Ha'], coords['Ga'])
-	})
-	naver.maps.Event.addListener(pano, "pano_changed", function() {
-		var streetviewUrl = "https://map.naver.com/v5/?c=14185421.9777121,4477822.3462987,17,0,0,0,dha&p="
-		streetviewUrl = streetviewUrl + pano.getPanoId() + ',0,0,80,Float';	
-		window.open(streetviewUrl);
-	});
-}
-
 var markers = [];
-function createAgoMarker(optionIndex){
+function createAgoMarker(){
 	var date = new Date();
 	var nowYearDateTime = String(date.getFullYear()) + String(date.getMonth() + 1) + String(date.getDate());
 	var gpsFilePathName = "/data/log/roadview_log/" + nowYearDateTime + "total_gps.log"
@@ -456,36 +449,17 @@ function createAgoMarker(optionIndex){
 			$.each(gps_array, function(i, el){
 				if($.inArray(el, unique_gps_array) === -1) unique_gps_array.push(el);
 			});
+			
 			//마커 찍기
 			for (var i = 0; i < unique_gps_array.length; i++) {
 				if (unique_gps_array[i] != "") {
 					gps = unique_gps_array[i].split(',');
-					if(optionIndex == "0"){
-						var markerPosition = new kakao.maps.LatLng(gps[1], gps[2]);
-						var marker = new kakao.maps.Marker({
-							map: map, // 마커를 표시할 지도
-							position: markerPosition // 마커의 위치
-						});
-						markers.push(marker);
-					}else if(optionIndex == "1"){
-						if(gps[0] == "1"){
-							var markerPosition = new kakao.maps.LatLng(gps[1], gps[2]);
-							var marker = new kakao.maps.Marker({
-								map: map, // 마커를 표시할 지도
-								position: markerPosition // 마커의 위치
-							});
-							markers.push(marker);
-						}
-					}else if(optionIndex == "2"){
-						if(gps[0] == "2"){
-							var markerPosition = new kakao.maps.LatLng(gps[1], gps[2]);
-							var marker = new kakao.maps.Marker({
-								map: map, // 마커를 표시할 지도
-								position: markerPosition // 마커의 위치
-							});
-							markers.push(marker);
-						}
-					}
+					var markerPosition = new kakao.maps.LatLng(gps[1], gps[2]);
+					var marker = new kakao.maps.Marker({
+						map: map, // 마커를 표시할 지도
+						position: markerPosition // 마커의 위치
+					});
+					markers.push(marker);
 				}
 			}
 		}
