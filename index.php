@@ -35,16 +35,16 @@
 <div id="kakao">
 	<h2 style="display:inline"> 
 	<a href="http://jyh.kr/kakao/kakao_roadview_search.html" 		style="background-color:ffe812;"  		target="_blank">카카오 로드뷰</a> /
-	<a href="http://jyh.kr/kakao/view/kakao_roadview_log.php" 												target="_blank">로드뷰 로그</a> /
-	<a href="http://jyh.kr/kakao/view/kakao_progress_log.php" 												target="_blank">전체 조사 현황</a> / 
+	<!-- <a href="http://jyh.kr/kakao/view/kakao_roadview_log.php" 												target="_blank">로드뷰 로그</a> / -->
 	<a href="http://jyh.kr/kakao/view/kakao_upload_gps_log.html" 											target="_blank">로그 직접입력</a> / 
-	<a href="http://jyh.kr/naver/naver_streetview_search.html" 		style="color:#2DB400;" 					target="_blank">네이버 거리뷰</a> / 
-	<a href="http://jyh.kr/naver/naver_map_gps_parsing.php" 		style="color:#2DB400;" 					target="_blank">네이버 GPS 검색</a> / 
+	<a href="http://jyh.kr/naver/naver_streetview_search.html" 							 					target="_blank">네이버 거리뷰</a> / 
+	<a href="http://jyh.kr/naver/naver_map_gps_parsing.php" 							 					target="_blank">네이버 GPS 검색</a> / 
+	<a href="http://jyh.kr/kakao/view/kakao_progress_log.php" 												target="_blank">전체 조사 현황</a> / 
 	<a href="http://jyh.kr/file/" target="_blank">파일저장소</a><hr>
 
 </div>
 
-<div id="map" style="width:98%;height:90%; margin-left: 1%; margin-right: 10%; border:1px solid black;"></div>
+<div id="map" style="width:98%;height:90%; margin-left:1%; margin-right:10%; border:1px solid black;"></div>
 </body>
 
 <script>
@@ -84,8 +84,9 @@ var name = ''
 	})
 });
 
-var successDong = ["증포동", "진리동", "안흥동", "관고동", "송정동", "중리동", "창전동", "갈산동", "율현동"];
-var successLi = ["조읍리", "모전리", "경사리", "도립리", "현방리", "상용리", "내촌리", "사동리", "대흥리", "대대리", "가산리", "제요리", "이평리", "해월리", "덕평리", "송계리", "금당리", "장능리", "대죽리", "수산리", "상봉리", "신필리", "장천리", "행죽리", "암산리", "자석리", "응암리", "송온리", "수정리", "죽당리", "송말리", "백우리", "신대리", "도지리", "우곡리", "신원리", "고백리", "대관리", "무촌리", "초지리", "부필리", "구시리", "도리리", "도암리", "군량리", "장평리"];
+var inprogressDong = ["부발읍", "호법면", "신둔면", "마장면", "고담동"];
+var successDong = ["증포동", "진리동", "안흥동", "관고동", "송정동", "중리동", "창전동", "갈산동", "율현동", "사음동", "대월면", "설성면", "백사면", "증일동", "장록동"];
+var successLi = ["조읍리", "모전리", "경사리", "도립리", "현방리", "상용리", "내촌리", "사동리", "대흥리", "대대리", "가산리", "제요리", "이평리", "해월리", "덕평리", "송계리", "금당리", "장능리", "대죽리", "수산리", "상봉리", "신필리", "장천리", "행죽리", "암산리", "자석리", "응암리", "송온리", "수정리", "죽당리", "송말리", "백우리", "신대리", "도지리", "우곡리", "신원리", "고백리", "대관리", "무촌리", "초지리", "부필리", "구시리", "도리리", "도암리", "군량리", "장평리", "송라리"];
 var polygons = []
 
 //법정동 폴리곤 생성
@@ -102,7 +103,7 @@ function displayDongArea(name, coordinates){
 		path.push(new daum.maps.LatLng(coordinate[1], coordinate[0]));
 	})
 
-	for (i=0; i<successDong.length; i++){
+	for (var i=0; i<successDong.length; i++){
 		if(name == successDong[i]){
 			var polygon = new daum.maps.Polygon({
 				map: map, // 다각형을 표시할 지도 객체
@@ -115,14 +116,30 @@ function displayDongArea(name, coordinates){
 			});
 		}
 	}
+
+	for (var i=0; i<inprogressDong.length; i++){
+		if(name == inprogressDong[i]){
+			var polygon = new daum.maps.Polygon({
+				map: map, // 다각형을 표시할 지도 객체
+				path: path,
+				strokeWeight: 2,
+				strokeColor: '#004c80',
+				strokeOpacity: 3,
+				fillColor: '#ff0000',
+				fillOpacity: 0.5
+			});
+			// name = name + "<br>(이름)";
+		}
+	}
+
 	var polygon = new daum.maps.Polygon({
 		map: map, // 다각형을 표시할 지도 객체
 		path: path,
 		strokeWeight: 2,
 		strokeColor: '#004c80',
-		strokeOpacity: 0.8,
-		fillColor: '#09f',
-		fillOpacity: 0.1
+		strokeOpacity: 1,
+		// fillColor: '#09f',
+		// fillOpacity: 0.1
 	});
 
 	polygons.push(polygon);
@@ -150,19 +167,20 @@ function displayLiArea(name, coordinates){
 		path.push(new daum.maps.LatLng(coordinate[1], coordinate[0]));
 	})
 
-	for (i=0; i<successLi.length; i++){
-		if(name == successLi[i]){
-			var polygon = new daum.maps.Polygon({
-				map: map, 
-				path: path,
-				strokeWeight: 0.3,
-				strokeColor: '#ff0f01',
-				strokeOpacity: 0.8,
-				fillColor: '#020000',
-				fillOpacity: 0.75
-			});
-		}
-	}
+	// for (i=0; i<successLi.length; i++){
+	// 	if(name == successLi[i]){
+	// 		var polygon = new daum.maps.Polygon({
+	// 			map: map, 
+	// 			path: path,
+	// 			strokeWeight: 0.3,
+	// 			strokeColor: '#ff0f01',
+	// 			strokeOpacity: 0.8,
+	// 			fillColor: '#020000',
+	// 			fillOpacity: 0.75
+	// 		});
+	// 	}
+	// }
+
 	var polygon = new daum.maps.Polygon({
         map: map, 
         path: path,
